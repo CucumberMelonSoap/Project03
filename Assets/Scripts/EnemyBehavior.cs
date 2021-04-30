@@ -43,6 +43,7 @@ public class EnemyBehavior : MonoBehaviour
         int zValue = Random.Range(_zLowerBound, _zUpperBound + 1);
 
         Vector3 destination = new Vector3(xValue, 0f, zValue);
+        Debug.Log(destination);
 
         return destination;
     }
@@ -56,7 +57,7 @@ public class EnemyBehavior : MonoBehaviour
 
     private void MoveToDestination()
     {
-        if (_currentlyMoving && (Mathf.Abs(Vector3.Distance(transform.position, _destinationPoint)) >= 0.5))
+        if (_currentlyMoving && (Mathf.Abs(Vector3.Distance(transform.position, _destinationPoint)) >= 0.8))
         {
             Vector3 towardsPoint = transform.forward * _moveSpeed * Time.deltaTime;
             towardsPoint.y = 0;
