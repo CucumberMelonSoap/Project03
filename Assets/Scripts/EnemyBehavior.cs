@@ -35,6 +35,7 @@ public class EnemyBehavior : MonoBehaviour
     void Update()
     {
         MoveToDestination();
+        CheckMoveTimer();
     }
 
     private Vector3 RandomDestination()
@@ -66,5 +67,18 @@ public class EnemyBehavior : MonoBehaviour
         }
         else
             _currentlyMoving = false;
+    }
+
+    private void CheckMoveTimer()
+    {
+        _wanderTimer -= Time.deltaTime;
+
+        if(_wanderTimer <= 0)
+        {
+            _destinationPoint = RandomDestination();
+            transform.LookAt(_destinationPoint);
+            _currentlyMoving = true;
+            _wanderTimer = _wanderCooldown;
+        }
     }
 }

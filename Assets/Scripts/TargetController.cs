@@ -8,8 +8,12 @@ public class TargetController : MonoBehaviour
     [SerializeField] Camera _mainCamera;
     private DetectEnemy _enemyTarget;
     [SerializeField] Image _crosshairImg;
+    [SerializeField] Image _iconIndicatorImg;
+    [SerializeField] PlayerMovement _playerMove;
+    [SerializeField] LevelController _levelController;
 
     private bool _currentlyLockedOn;
+    private bool _lockScreenActive;
     private int _enemyIndex;
 
     //List of nearby enemies
@@ -19,6 +23,8 @@ public class TargetController : MonoBehaviour
     void Start()
     {
         _crosshairImg.enabled = false;
+        _iconIndicatorImg.enabled = false;
+        _lockScreenActive = false;
         _currentlyLockedOn = false;
         _enemyIndex = 0;
     }
@@ -39,21 +45,38 @@ public class TargetController : MonoBehaviour
         }
 
         //Target Switcher Right
-        if (Input.GetKeyDown(KeyCode.L))
+        if (Input.GetKey(KeyCode.U))
         {
-            if (_enemyIndex == nearByEnemies.Count - 1)
+            _lockScreenActive = true;
+
+            if (Input.GetKeyDown(KeyCode.L))
             {
-                //If End Of List Has Been Reached, Start Over
-                _enemyIndex = 0;
-                _enemyTarget = nearByEnemies[_enemyIndex];
-            }
-            else
-            {
-                //Move To Next Enemy In List
-                _enemyIndex++;
-                _enemyTarget = nearByEnemies[_enemyIndex];
+                if (_enemyIndex == nearByEnemies.Count - 1)
+                {
+                    //If End Of List Has Been Reached, Start Over
+                    _enemyIndex = 0;
+                    _enemyTarget = nearByEnemies[_enemyIndex];
+                }
+                else
+                {
+                    //Move To Next Enemy In List
+                    _enemyIndex++;
+                    _enemyTarget = nearByEnemies[_enemyIndex];
+                }
+
+                //Determine Crosshair Location Based On The Current Target
+                _iconIndicatorImg.enabled = true;
+                _iconIndicatorImg.transform.position = _levelController.CurrentEnemyIcon().transform.position + new Vector3(0, 15, 0);
+
+                _playerMove.LookAtEnemy();
             }
         }
+        else
+        {
+            _lockScreenActive = false;
+            _iconIndicatorImg.enabled = false;
+        }
+
 
 
         //Display Crosshair
@@ -62,7 +85,7 @@ public class TargetController : MonoBehaviour
             _enemyTarget = nearByEnemies[_enemyIndex];
 
             //Determine Crosshair Location Based On The Current Target
-            gameObject.transform.position = _mainCamera.WorldToScreenPoint(_enemyTarget.transform.position);
+            gameObject.transform.position = _mainCamera.WorldToScreenPoint(_enemyTarget.transform.position + Vector3.up);
 
             //Rotate Crosshair
             //gameObject.transform.Rotate(new Vector3(0, 0, -1));
@@ -80,5 +103,22 @@ public class TargetController : MonoBehaviour
 
         //Determine Crosshair Location Based On The Current Target
         gameObject.transform.position = _mainCamera.WorldToScreenPoint(_enemyTarget.transform.position);
+
+        _playerMove.LookAtEnemy();
+    }
+    
+    public DetectEnemy GetCurrentTarget()
+    {
+        return _enemyTarget;
+    }
+
+    public int GetCurrentIndex()
+    {
+        return _enemyIndex;
+    }
+
+    public bool GetScreenActive()
+    {
+        return _lockScreenActive;
     }
 }
