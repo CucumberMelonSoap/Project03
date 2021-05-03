@@ -87,8 +87,6 @@ public class TargetController : MonoBehaviour
             //Determine Crosshair Location Based On The Current Target
             gameObject.transform.position = _mainCamera.WorldToScreenPoint(_enemyTarget.transform.position + Vector3.up);
 
-            //Rotate Crosshair
-            //gameObject.transform.Rotate(new Vector3(0, 0, -1));
         }
     }
 

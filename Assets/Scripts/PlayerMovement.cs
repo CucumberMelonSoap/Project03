@@ -10,7 +10,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] LayerMask groundMask;
     [SerializeField] float _characterSpeed = 12f;
     [SerializeField] float _gravity = -9.81f;
-    [SerializeField] float _groundDistance = 0.4f;
+    [SerializeField] float _groundDistance = 0.15f;
     [SerializeField] float _jumpHeight = 3f;
     [SerializeField] LayerMask enemyMask;
 
@@ -43,7 +43,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (_isOnEnemy)
         {
-            float moveBack = -0.75f;
+            float moveBack = -0.05f;
             _characterController.Move(transform.forward * moveBack);
         }
 
@@ -72,7 +72,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void LookAtEnemy()
     {
-        if(_currentEnemy != null && _isGrounded)
+        if(_currentEnemy != null && _isGrounded && !_isOnEnemy)
         {
             Vector3 lookAtPoint = _currentEnemy.transform.position;
             lookAtPoint.y = 1;
