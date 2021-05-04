@@ -13,11 +13,14 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float _groundDistance = 0.15f;
     [SerializeField] float _jumpHeight = 3f;
     [SerializeField] LayerMask enemyMask;
+    [SerializeField] Vector3 moveAmount;
+    [SerializeField] float verticalMovement;
 
     private Vector3 _playerVelocity;
     private bool _isGrounded;
     private bool _isOnEnemy;
-    private DetectEnemy _currentEnemy;
+    private bool _watchingEnemy;
+    private EnemyBehavior _currentEnemy;
     private float _targetRefreshRate;
 
     [SerializeField] TargetController _targetController;
@@ -25,7 +28,9 @@ public class PlayerMovement : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        _targetRefreshRate = 0;
+        LookAtEnemy();
+        _watchingEnemy = true;
+
     }
 
     // Update is called once per frame
@@ -47,15 +52,19 @@ public class PlayerMovement : MonoBehaviour
             _characterController.Move(transform.forward * moveBack);
         }
 
-        float horizontalMovement = 0;
-        float verticalMovement;
+        verticalMovement = Input.GetAxis("Horizontal");
 
-        if (transform.localRotation.y > 0)
-            verticalMovement = Input.GetAxis("Horizontal");
+        if (verticalMovement < 0 && transform.rotation.y > 0)
+            transform.Rotate(0, -180, 0);
+        else if (verticalMovement > 0 && transform.rotation.y < 0)
+            transform.Rotate(0, 180, 0);
         else
-            verticalMovement = Input.GetAxis("Horizontal") * -1;
+            transform.Rotate(0, 0, 0);
 
-        Vector3 moveAmount = (transform.right * horizontalMovement) + (transform.forward * verticalMovement);
+        if (transform.localRotation.y < 0)
+            verticalMovement *= -1;
+
+        moveAmount = transform.forward * verticalMovement;
 
  
         _characterController.Move(moveAmount * _characterSpeed * Time.deltaTime);
@@ -68,6 +77,7 @@ public class PlayerMovement : MonoBehaviour
 
         _playerVelocity.y += _gravity * Time.deltaTime;
         _characterController.Move(_playerVelocity * Time.deltaTime);
+
     }
 
     public void LookAtEnemy()
@@ -77,6 +87,8 @@ public class PlayerMovement : MonoBehaviour
             Vector3 lookAtPoint = _currentEnemy.transform.position;
             lookAtPoint.y = 1;
             transform.LookAt(lookAtPoint);
+
+            _watchingEnemy = false;
         }
     }
 
@@ -87,11 +99,22 @@ public class PlayerMovement : MonoBehaviour
         if(_targetRefreshRate <= 0 && _isGrounded)
         {
             _currentEnemy = _targetController.GetCurrentTarget();
-            LookAtEnemy();
 
-            _targetRefreshRate = 0.25f;
+            if (_watchingEnemy)
+                LookAtEnemy();
+
+            _targetRefreshRate = 0.3f;
         }
         
-        
+    }
+
+    public void SetEnemyWatch(bool watching)
+    {
+        _watchingEnemy = watching;
+    }
+
+    public bool GetIsGrounded()
+    {
+        return _isGrounded;
     }
 }

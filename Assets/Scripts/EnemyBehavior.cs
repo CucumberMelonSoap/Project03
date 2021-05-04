@@ -31,18 +31,24 @@ public class EnemyBehavior : MonoBehaviour
     [SerializeField] LayerMask _playerLayer;
     [SerializeField] int _damageAmount = 8;
     public int _attackHits = 2;
-    private LevelController _levelController = null;
+    
 
     [Header("Health")]
     [SerializeField] int _health = 250;
+    [SerializeField] ParticleSystem _deathVFX = null;
+
+    [Header("Controllers")]
+    [SerializeField] LevelController _levelController = null;
+    [SerializeField] TargetController _targetController = null;
 
     // Start is called before the first frame update
     void Start()
     {
         _wanderTimer = _wanderCooldown;
         _attackTimer = _attackCooldown;
+        _levelController = FindObjectOfType<LevelController>();
+        _targetController = FindObjectOfType<TargetController>();
 
-        _levelController = GameObject.FindObjectOfType<LevelController>();
         SetInitialMovement();
         
     }
@@ -83,7 +89,7 @@ public class EnemyBehavior : MonoBehaviour
     {
         _destinationPoint.y = 0;
 
-        if (_currentlyMoving && (Mathf.Abs(Vector3.Distance(transform.position, _destinationPoint)) >= 1.5))
+        if (_currentlyMoving && (Mathf.Abs(Vector3.Distance(transform.position, _destinationPoint)) >= 1))
         {
             Vector3 towardsPoint = transform.forward * _moveSpeed * Time.deltaTime;
             towardsPoint.y = 0;
@@ -125,7 +131,7 @@ public class EnemyBehavior : MonoBehaviour
                 _destinationPoint = playerPosition;
                 _wanderTimer = _wanderCooldown = 1.5f;
 
-                if(Mathf.Abs(Vector3.Distance(transform.position, playerPosition)) <= 1.75)
+                if(Mathf.Abs(Vector3.Distance(transform.position, playerPosition)) <= 1.25)
                 {
                     if (_readyToAttack)
                         AttackPlayer();
@@ -157,11 +163,9 @@ public class EnemyBehavior : MonoBehaviour
 
     private void AttackPlayer()
     {
-        _attackHits = Random.Range(1, 4);
         _currentlyMoving = false;
-        Destroy(Instantiate(_attackSystem, transform.position + (transform.forward * 1.5f), transform.rotation), 1f);
-
-        _levelController.StartCoroutine(_levelController.DisplayEnemyDamage(transform.position, _attackHits));
+        Vector3 positionAttack = (transform.forward * 1.2f) + (transform.up * 0.75f);
+        Destroy(Instantiate(_attackSystem, transform.position + positionAttack, transform.rotation, transform), 0.5f);
 
         _readyToAttack = false;
     }
@@ -169,6 +173,20 @@ public class EnemyBehavior : MonoBehaviour
     public int GetDamage()
     {
         return _damageAmount;
+    }
+
+    public void DamageEnemy(int damage)
+    {
+        _health -= damage;
+
+        if(_health <= 0)
+        {
+            Instantiate(_deathVFX, transform.position, transform.rotation);
+            _levelController.DisableEnemyIcon();
+            _targetController.ReduceEnemyCount();
+            _targetController.MoveToNextEnemy();
+            Destroy(gameObject);
+        }
     }
 
 }

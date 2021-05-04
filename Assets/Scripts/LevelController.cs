@@ -13,6 +13,12 @@ public class LevelController : MonoBehaviour
     [SerializeField] Text _tpTxt = null;
     [SerializeField] Text _damageToEnemyTxt = null;
     [SerializeField] Text _damageToPlayerTxt = null;
+    [SerializeField] Image _portraitNeutral = null;
+    [SerializeField] Image _portraitAttack = null;
+    [SerializeField] Image _portraitDamaged = null;
+    [SerializeField] Image _portraitVictory = null;
+    [SerializeField] Image _portraitLose = null;
+    [SerializeField] Image _arteName = null;
 
     [Header("TargetScreen")]
     [SerializeField] Material _enemyOriginal;
@@ -26,6 +32,7 @@ public class LevelController : MonoBehaviour
     private Camera _mainCamera;
     private PlayerMovement _player;
     private EnemyBehavior[] _enemyList;
+    private bool _isGameDone;
     // Start is called before the first frame update
     void Start()
     {
@@ -36,6 +43,15 @@ public class LevelController : MonoBehaviour
 
         _damageToEnemyTxt.enabled = false;
         _damageToPlayerTxt.enabled = false;
+
+        _portraitNeutral.enabled = true;
+        _portraitAttack.enabled = false;
+        _portraitDamaged.enabled = false;
+        _portraitVictory.enabled = false;
+        _portraitLose.enabled = false;
+        _arteName.enabled = false;
+
+        _isGameDone = false;
     }
 
     // Update is called once per frame
@@ -51,50 +67,76 @@ public class LevelController : MonoBehaviour
 
     private void DarkenScreen()
     {
+        
         //darken the models
-        foreach(GameObject obj in _allEntities)
+        foreach (GameObject obj in _allEntities)
         {
-            MeshRenderer objMesh = obj.GetComponent<MeshRenderer>();
-
-            if(obj != null && objMesh)
+            if(obj != null)
             {
-                if (obj.layer == 9)
-                    objMesh.material = _enemyDarken;
-                else
-                    objMesh.material = _playerDarken;
+                MeshRenderer objMesh = obj.GetComponent<MeshRenderer>();
+
+                if (objMesh)
+                {
+                    if (obj.layer == 9)
+                        objMesh.material = _enemyDarken;
+                    else
+                        objMesh.material = _playerDarken;
+                }
             }
         }
 
+        HighlightCurrentEnemy();
+
         //disable movement
         _player.enabled = false;
+        _player.GetComponent<PlayerStats>().enabled = false;
         foreach(EnemyBehavior enemy in _enemyList)
         {
-            enemy.enabled = false;
+            if(enemy != null)
+                enemy.enabled = false;
         }
 
     }
 
     private void RevertScreen()
     {
-        //darken the models
+        //lighten the models
         foreach (GameObject obj in _allEntities)
         {
-            MeshRenderer objMesh = obj.GetComponent<MeshRenderer>();
-
-            if (obj != null && objMesh)
+            if(obj != null)
             {
-                if (obj.layer == 9)
-                    objMesh.material = _enemyOriginal;
-                else
-                    objMesh.material = _playerOriginal;
+                MeshRenderer objMesh = obj.GetComponent<MeshRenderer>();
+
+                if (objMesh)
+                {
+                    if (obj.layer == 9)
+                        objMesh.material = _enemyOriginal;
+                    else
+                        objMesh.material = _playerOriginal;
+                }
             }
         }
 
         //reenable movement
         _player.enabled = true;
+        _player.GetComponent<PlayerStats>().enabled = true;
         foreach (EnemyBehavior enemy in _enemyList)
         {
-            enemy.enabled = true;
+           if(enemy != null)
+                enemy.enabled = true;
+        }
+    }
+
+    private void HighlightCurrentEnemy()
+    {
+        //_enemyList[_targetController.GetCurrentIndex()]
+        //lighten the models
+        EnemyBehavior current = _enemyList[_targetController.GetCurrentIndex()];
+        MeshRenderer[] meshList = current.GetComponentsInChildren<MeshRenderer>();
+
+        foreach (MeshRenderer mesh in meshList)
+        {
+            mesh.material = _enemyOriginal;
         }
     }
 
@@ -128,12 +170,96 @@ public class LevelController : MonoBehaviour
 
     public IEnumerator DisplayEnemyDamage(Vector3 enemyPosition, int numAttacks)
     {
-        _damageToEnemyTxt.enabled = true;
-        _damageToEnemyTxt.text = (_enemyList[_targetController.GetCurrentIndex()].GetDamage() * numAttacks).ToString();
-        _damageToEnemyTxt.transform.position = _mainCamera.WorldToScreenPoint(enemyPosition + (Vector3.up * 3));
+        _damageToPlayerTxt.enabled = true;
+        _damageToPlayerTxt.text = (_enemyList[_targetController.GetCurrentIndex()].GetDamage() * numAttacks).ToString();
+        _damageToPlayerTxt.transform.position = _mainCamera.WorldToScreenPoint(enemyPosition + (Vector3.up * 2));
 
         yield return new WaitForSeconds(0.75f);
 
-        _damageToEnemyTxt.enabled = false;   
+        _damageToPlayerTxt.enabled = false;   
+    }
+
+    public IEnumerator DisplayPlayerDamage(Vector3 position, int damage)
+    {
+        _damageToEnemyTxt.enabled = true;
+        _damageToEnemyTxt.text = damage.ToString();
+        _damageToEnemyTxt.transform.position = _mainCamera.WorldToScreenPoint(position + (Vector3.up * 1.5f));
+
+        yield return new WaitForSeconds(0.75f);
+
+        _damageToEnemyTxt.enabled = false;
+    }
+
+    public IEnumerator DispalyAttackPortait()
+    {
+        _portraitAttack.enabled = true;
+        _portraitNeutral.enabled = false;
+        _portraitDamaged.enabled = false;
+
+        yield return new WaitForSeconds(0.5f);
+
+        _portraitAttack.enabled = false;
+        _portraitNeutral.enabled = true;
+    }
+
+    public IEnumerator DispalyArteName()
+    {
+        _arteName.enabled = true;
+
+        yield return new WaitForSeconds(0.7f);
+
+        _arteName.enabled = false;
+    }
+
+    public IEnumerator DisplayDamagedPortrait()
+    {
+        _portraitDamaged.enabled = true;
+        _portraitNeutral.enabled = false;
+        _portraitAttack.enabled = false;
+
+        yield return new WaitForSeconds(0.5f);
+
+        _portraitDamaged.enabled = false;
+        _portraitNeutral.enabled = true;
+
+    }
+
+    public void DisableEnemyIcon()
+    {
+        CurrentEnemyIcon().GetComponentInChildren<Text>().enabled = false;
+        CurrentEnemyIcon().enabled = false;  
+    }
+
+    public void Victory()
+    {
+        _portraitNeutral.enabled = false;
+        _portraitAttack.enabled = false;
+        _portraitDamaged.enabled = false;
+        _portraitVictory.enabled = true;
+        _portraitLose.enabled = false;
+        _arteName.enabled = false;
+        _player.GetComponent<PlayerStats>().enabled = false;
+        _targetController.enabled = false;
+        StopAllCoroutines();
+        Time.timeScale = 0;
+        _isGameDone = true;
+    }
+
+    public void Lose()
+    {
+        StopAllCoroutines();
+        _portraitNeutral.enabled = false;
+        _portraitDamaged.enabled = false;
+        _portraitLose.enabled = true;
+        _arteName.enabled = false;
+        _player.GetComponent<PlayerStats>().enabled = false;
+        _targetController.enabled = false; 
+        Time.timeScale = 0;
+        _isGameDone = true;
+    }
+
+    public bool GetGameState()
+    {
+        return _isGameDone;
     }
 }
