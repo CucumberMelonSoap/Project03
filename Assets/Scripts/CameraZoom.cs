@@ -4,37 +4,46 @@ using UnityEngine;
 
 public class CameraZoom : MonoBehaviour
 {
-    [SerializeField] GameObject _player;
-    [SerializeField] TargetController _targetController;
+    [SerializeField] PlayerMovement _player;
     [SerializeField] float _zoomSpeed = 2f;
     [SerializeField] float _lowBoundZ = -9;
     [SerializeField] float _upBoundZ = -14;
 
-    private float _distanceBetween;
+    private Vector3 _fromEdge;
+    private Camera _mainCamera;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        _mainCamera = GetComponent<Camera>();
+        _player = FindObjectOfType<PlayerMovement>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        FindDistance();
+        
+        _fromEdge = _mainCamera.WorldToViewportPoint(_player.transform.position);
 
-        if(_distanceBetween <= 15)
+        if (_fromEdge.x >= 0.95 && _mainCamera.transform.position.z > _upBoundZ)
         {
-
+            ZoomOut();
         }
-        else
-        {
-
+        else if(_fromEdge.x < 0.75 && _mainCamera.transform.position.z < _lowBoundZ)
+        { 
+            ZoomIn();
         }
+
     }
 
-    private void FindDistance()
+    private void ZoomOut()
+    {       
+        _mainCamera.transform.Translate(Vector3.back * _zoomSpeed);
+    }
+
+    private void ZoomIn()
     {
-        _distanceBetween = Vector3.Distance(_player.transform.position, _targetController.GetCurrentTarget().transform.position);
+        _mainCamera.transform.Translate(Vector3.forward * _zoomSpeed);
     }
+
 }

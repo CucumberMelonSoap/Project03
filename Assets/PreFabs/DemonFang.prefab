@@ -246,6 +246,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _arteSpeed: 10
   _player: {fileID: 0}
+  _onHit: {fileID: 8348199521546417873, guid: 9f00af784de42da4ebdc5be9d4c65ba8, type: 3}
 --- !u!1 &7096613666894083621
 GameObject:
   m_ObjectHideFlags: 0

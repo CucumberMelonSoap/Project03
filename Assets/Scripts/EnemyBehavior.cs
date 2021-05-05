@@ -21,18 +21,14 @@ public class EnemyBehavior : MonoBehaviour
     [SerializeField] float _wanderTimer;
     [SerializeField] float _attackCooldown = 3f;
     [SerializeField] float _attackTimer;
-    private bool _lockedOnPlayer = false;
     private bool _readyToAttack = false;
-    private Collider _playerCollider;
 
     [Header("Attack")]
     [SerializeField] GameObject _attackSystem;
     [SerializeField] float _enemyRadius = 4f;
     [SerializeField] LayerMask _playerLayer;
     [SerializeField] int _damageAmount = 8;
-    public int _attackHits = 2;
-    
-
+   
     [Header("Health")]
     [SerializeField] int _health = 250;
     [SerializeField] ParticleSystem _deathVFX = null;
@@ -61,10 +57,6 @@ public class EnemyBehavior : MonoBehaviour
         CheckAttackTimer();
         CheckOverlapSphere();
 
-        /*
-        if (_lockedOnPlayer)
-            FollowPlayer();
-        */
     }
 
     private Vector3 RandomDestination()
@@ -73,7 +65,6 @@ public class EnemyBehavior : MonoBehaviour
         int zValue = Random.Range(_zLowerBound, _zUpperBound + 1);
 
         Vector3 destination = new Vector3(xValue, 0f, zValue);
-        Debug.Log(destination);
 
         return destination;
     }
@@ -89,7 +80,7 @@ public class EnemyBehavior : MonoBehaviour
     {
         _destinationPoint.y = 0;
 
-        if (_currentlyMoving && (Mathf.Abs(Vector3.Distance(transform.position, _destinationPoint)) >= 1))
+        if (_currentlyMoving && (Mathf.Abs(Vector3.Distance(transform.position, _destinationPoint)) >= 0.95))
         {
             Vector3 towardsPoint = transform.forward * _moveSpeed * Time.deltaTime;
             towardsPoint.y = 0;
@@ -125,13 +116,12 @@ public class EnemyBehavior : MonoBehaviour
                 Vector3 playerPosition = hitCollider.transform.position;
                 playerPosition.y = 0;
                 transform.LookAt(playerPosition);
-                _lockedOnPlayer = true;
-                //follow player
-                _playerCollider = hitCollider;
-                _destinationPoint = playerPosition;
-                _wanderTimer = _wanderCooldown = 1.5f;
 
-                if(Mathf.Abs(Vector3.Distance(transform.position, playerPosition)) <= 1.25)
+                //follow player
+                _destinationPoint = playerPosition;
+                _wanderTimer = 2.5f;
+
+                if(Mathf.Abs(Vector3.Distance(transform.position, playerPosition)) <= 1.5)
                 {
                     if (_readyToAttack)
                         AttackPlayer();
@@ -151,20 +141,11 @@ public class EnemyBehavior : MonoBehaviour
         }
     }
 
-    private void FollowPlayer()
-    {
-        //_currentlyMoving = true;
-        Vector3 playerPosition = _playerCollider.transform.position;
-        playerPosition.y = 0;
-        transform.LookAt(playerPosition);
-        //follow player
-        _destinationPoint = playerPosition;
-    }
 
     private void AttackPlayer()
     {
         _currentlyMoving = false;
-        Vector3 positionAttack = (transform.forward * 1.2f) + (transform.up * 0.75f);
+        Vector3 positionAttack = (transform.forward * 1.4f) + (transform.up * 0.75f);
         Destroy(Instantiate(_attackSystem, transform.position + positionAttack, transform.rotation, transform), 0.5f);
 
         _readyToAttack = false;

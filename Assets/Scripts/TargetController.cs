@@ -21,6 +21,7 @@ public class TargetController : MonoBehaviour
     private int _enemiesLeft;
 
     public static EnemyBehavior[] nearbyEnemies;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -61,7 +62,6 @@ public class TargetController : MonoBehaviour
             if(Input.GetKey(KeyCode.U))
             {
                 _lockScreenActive = true;
-                //Determine Crosshair Location Based On The Current Target
                 _iconIndicatorImg.enabled = true;
                 _iconIndicatorImg.transform.position = _levelController.CurrentEnemyIcon().transform.position + new Vector3(0, 20, 0);
                 _playerMove.LookAtEnemy();
@@ -75,7 +75,7 @@ public class TargetController : MonoBehaviour
         }
         else
         {
-            //Target Switcher Right
+            //Target Switcher 
             if (Input.GetKey(KeyCode.U))
             {
                 _lockScreenActive = true;

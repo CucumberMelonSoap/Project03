@@ -19,6 +19,8 @@ public class LevelController : MonoBehaviour
     [SerializeField] Image _portraitVictory = null;
     [SerializeField] Image _portraitLose = null;
     [SerializeField] Image _arteName = null;
+    [SerializeField] GameObject _victoryPanel = null;
+    [SerializeField] GameObject _losePanel = null;
 
     [Header("TargetScreen")]
     [SerializeField] Material _enemyOriginal;
@@ -51,18 +53,24 @@ public class LevelController : MonoBehaviour
         _portraitLose.enabled = false;
         _arteName.enabled = false;
 
+        _victoryPanel.SetActive(false);
+        _losePanel.SetActive(false);
+
         _isGameDone = false;
     }
 
     // Update is called once per frame
     void Update()
     {
-        EnemyIconRotation();
+        if(!_isGameDone)
+        {
+            EnemyIconRotation();
 
-        if (_targetController.GetScreenActive())
-            DarkenScreen();
-        else
-            RevertScreen();
+            if (_targetController.GetScreenActive())
+                DarkenScreen();
+            else
+                RevertScreen();
+        }
     }
 
     private void DarkenScreen()
@@ -129,7 +137,6 @@ public class LevelController : MonoBehaviour
 
     private void HighlightCurrentEnemy()
     {
-        //_enemyList[_targetController.GetCurrentIndex()]
         //lighten the models
         EnemyBehavior current = _enemyList[_targetController.GetCurrentIndex()];
         MeshRenderer[] meshList = current.GetComponentsInChildren<MeshRenderer>();
@@ -174,7 +181,7 @@ public class LevelController : MonoBehaviour
         _damageToPlayerTxt.text = (_enemyList[_targetController.GetCurrentIndex()].GetDamage() * numAttacks).ToString();
         _damageToPlayerTxt.transform.position = _mainCamera.WorldToScreenPoint(enemyPosition + (Vector3.up * 2));
 
-        yield return new WaitForSeconds(0.75f);
+        yield return new WaitForSecondsRealtime(0.75f);
 
         _damageToPlayerTxt.enabled = false;   
     }
@@ -185,7 +192,7 @@ public class LevelController : MonoBehaviour
         _damageToEnemyTxt.text = damage.ToString();
         _damageToEnemyTxt.transform.position = _mainCamera.WorldToScreenPoint(position + (Vector3.up * 1.5f));
 
-        yield return new WaitForSeconds(0.75f);
+        yield return new WaitForSecondsRealtime(0.75f);
 
         _damageToEnemyTxt.enabled = false;
     }
@@ -196,7 +203,7 @@ public class LevelController : MonoBehaviour
         _portraitNeutral.enabled = false;
         _portraitDamaged.enabled = false;
 
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSecondsRealtime(0.5f);
 
         _portraitAttack.enabled = false;
         _portraitNeutral.enabled = true;
@@ -206,7 +213,7 @@ public class LevelController : MonoBehaviour
     {
         _arteName.enabled = true;
 
-        yield return new WaitForSeconds(0.7f);
+        yield return new WaitForSecondsRealtime(0.7f);
 
         _arteName.enabled = false;
     }
@@ -217,7 +224,7 @@ public class LevelController : MonoBehaviour
         _portraitNeutral.enabled = false;
         _portraitAttack.enabled = false;
 
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSecondsRealtime(0.5f);
 
         _portraitDamaged.enabled = false;
         _portraitNeutral.enabled = true;
@@ -232,6 +239,7 @@ public class LevelController : MonoBehaviour
 
     public void Victory()
     {
+        _isGameDone = true;
         _portraitNeutral.enabled = false;
         _portraitAttack.enabled = false;
         _portraitDamaged.enabled = false;
@@ -241,21 +249,32 @@ public class LevelController : MonoBehaviour
         _player.GetComponent<PlayerStats>().enabled = false;
         _targetController.enabled = false;
         StopAllCoroutines();
+        _victoryPanel.SetActive(true);
         Time.timeScale = 0;
-        _isGameDone = true;
+
     }
 
     public void Lose()
     {
-        StopAllCoroutines();
+        _isGameDone = true;
+        _player.transform.GetComponent<PlayerMovement>().enabled = false;
+        _player.GetComponent<PlayerStats>().enabled = false;
+        _targetController.enabled = false;
+
+        MeshRenderer[] childrenMesh = _player.transform.GetComponentsInChildren<MeshRenderer>();
+        foreach(MeshRenderer mesh in childrenMesh)
+        {
+            mesh.material = _playerDarken;
+        }
+
         _portraitNeutral.enabled = false;
         _portraitDamaged.enabled = false;
         _portraitLose.enabled = true;
         _arteName.enabled = false;
-        _player.GetComponent<PlayerStats>().enabled = false;
-        _targetController.enabled = false; 
+        
+        StopAllCoroutines();
+        _losePanel.SetActive(true);
         Time.timeScale = 0;
-        _isGameDone = true;
     }
 
     public bool GetGameState()

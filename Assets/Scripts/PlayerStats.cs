@@ -18,16 +18,17 @@ public class PlayerStats : MonoBehaviour
 
     private LevelController _levelController;
     private PlayerMovement _player;
-    private EnemyBehavior _enemy;
     private GameObject _sword;
+    private GameObject _swordHolder;
+    private bool _isAttacking = false;
 
     // Start is called before the first frame update
     void Start()
     {
         _levelController = FindObjectOfType<LevelController>();
         _player = FindObjectOfType<PlayerMovement>();
-        _enemy = FindObjectOfType<EnemyBehavior>();
         _sword = GameObject.Find("Sword");
+        _swordHolder = GameObject.Find("Weapon");
     }
 
     // Update is called once per frame
@@ -38,16 +39,46 @@ public class PlayerStats : MonoBehaviour
         //if game is not finished, accept input
         if(!_levelController.GetGameState())
         {
-            if (Input.GetKeyDown(KeyCode.E) && _playerTP >= _arteTPCost && _player.GetIsGrounded())
+            if(!_isAttacking)
             {
-
-                Destroy(Instantiate(_arteAttack, swordTransform.position + (Vector3.down * 0.8f), _player.transform.rotation), 1.5f);
-                _levelController.StartCoroutine(_levelController.DispalyAttackPortait());
-                _levelController.StartCoroutine(_levelController.DispalyArteName());
-                UseTP(_arteTPCost);
+                if (Input.GetKeyDown(KeyCode.E) && _playerTP >= _arteTPCost && _player.GetIsGrounded())
+                {
+                    StartCoroutine(ArteAttack(swordTransform));
+                }
+                else if (Input.GetKeyDown(KeyCode.Q) && _player.GetIsGrounded())
+                {
+                    StartCoroutine(BasicAttack(swordTransform));
+                }
             }
         }
 
+    }
+
+    private IEnumerator ArteAttack(Transform sword)
+    {
+        _isAttacking = true;
+
+        Destroy(Instantiate(_arteAttack, sword.position + (Vector3.down * 0.6f), _player.transform.rotation), 1.25f);
+        _levelController.StartCoroutine(_levelController.DispalyAttackPortait());
+        _levelController.StartCoroutine(_levelController.DispalyArteName());
+        UseTP(_arteTPCost);
+
+        yield return new WaitForSecondsRealtime(0.1f);
+
+        _isAttacking = false;
+    }
+
+    private IEnumerator BasicAttack(Transform sword)
+    {
+        _isAttacking = true;
+        Vector3 swordAttackMove = (sword.up * -0.2f) + (sword.forward * 0.75f);
+        sword.position += swordAttackMove;
+        _levelController.StartCoroutine(_levelController.DispalyAttackPortait());
+
+        yield return new WaitForSecondsRealtime(0.1f);
+
+        sword.position = _swordHolder.transform.position;
+        _isAttacking = false;
     }
     
     public void DamagePlayer(int damageAmount)

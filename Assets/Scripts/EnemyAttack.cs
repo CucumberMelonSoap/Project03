@@ -30,6 +30,8 @@ public class EnemyAttack : MonoBehaviour
 
             for (int i = 0; i < attackHits; i++)
                 _player.DamagePlayer(_enemy.GetDamage());
+
+            _player.transform.GetComponent<CharacterController>().Move(_player.transform.forward * -0.15f);
         }
     }
 }

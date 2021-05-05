@@ -7,6 +7,7 @@ public class DemonFang : MonoBehaviour
     // Start is called before the first frame update
     [SerializeField] float _arteSpeed = 2f;
     [SerializeField] PlayerStats _player = null;
+    [SerializeField] ParticleSystem _onHit = null;
     private LevelController _levelController = null;
 
     private void Awake()
@@ -21,12 +22,12 @@ public class DemonFang : MonoBehaviour
         transform.position += transform.forward * _arteSpeed * Time.deltaTime;
     }
 
-    private void OnTriggerExit(Collider other)
+    private void OnTriggerEnter(Collider other)
     {
         //detect if its the enemy
         EnemyBehavior enemy = other.GetComponent<EnemyBehavior>();
 
-        //if its a valid player
+        //if its a valid enemy
         if (enemy != null)
         {
             int arteAttack = _player.GetArteAttackDamage();
@@ -34,6 +35,7 @@ public class DemonFang : MonoBehaviour
             _levelController.StartCoroutine(_levelController.DisplayPlayerDamage(transform.position, arteAttack));
 
             enemy.DamageEnemy(arteAttack);
+            Instantiate(_onHit, transform.position + (transform.forward * 0.6f), Quaternion.identity);
             Destroy(gameObject);
         }
     }

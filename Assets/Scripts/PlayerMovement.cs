@@ -5,7 +5,12 @@ using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
 {
+    [Header("Controllers")]
     [SerializeField] CharacterController _characterController = null;
+    [SerializeField] TargetController _targetController;
+    [SerializeField] LevelController _levelController;
+
+    [Header("Movement")]
     [SerializeField] Transform _groundCheck = null;
     [SerializeField] LayerMask groundMask;
     [SerializeField] float _characterSpeed = 12f;
@@ -13,8 +18,6 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] float _groundDistance = 0.15f;
     [SerializeField] float _jumpHeight = 3f;
     [SerializeField] LayerMask enemyMask;
-    [SerializeField] Vector3 moveAmount;
-    [SerializeField] float verticalMovement;
 
     private Vector3 _playerVelocity;
     private bool _isGrounded;
@@ -23,61 +26,67 @@ public class PlayerMovement : MonoBehaviour
     private EnemyBehavior _currentEnemy;
     private float _targetRefreshRate;
 
-    [SerializeField] TargetController _targetController;
-
     // Start is called before the first frame update
     void Start()
     {
         LookAtEnemy();
         _watchingEnemy = true;
+        _levelController = GameObject.FindObjectOfType<LevelController>();
 
     }
 
     // Update is called once per frame
     void Update()
     {
-        UpdateEnemyPosition();
-
-        _isGrounded = Physics.CheckSphere(_groundCheck.position, _groundDistance, groundMask);
-        _isOnEnemy = Physics.CheckSphere(_groundCheck.position, _groundDistance, enemyMask);
-
-        if (_isGrounded && _playerVelocity.y < 0)
+        //if game is not done
+        if(!_levelController.GetGameState())
         {
-            _playerVelocity.y = -2f;
+            UpdateEnemyPosition();
+
+            _isGrounded = Physics.CheckSphere(_groundCheck.position, _groundDistance, groundMask);
+            _isOnEnemy = Physics.CheckSphere(_groundCheck.position, _groundDistance, enemyMask);
+
+            if (_isGrounded && _playerVelocity.y < 0)
+            {
+                _playerVelocity.y = -2f;
+            }
+
+            if (_isOnEnemy)
+            {
+                float moveBack = -0.1f;
+                _characterController.Move(transform.forward * moveBack);
+            }
+
+            float verticalMovement = Input.GetAxis("Horizontal");
+
+            if (verticalMovement < 0 && transform.rotation.y > 0)
+                transform.Rotate(0, -180, 0);
+            else if (verticalMovement > 0 && transform.rotation.y < 0)
+                transform.Rotate(0, 180, 0);
+            else
+                transform.Rotate(0, 0, 0);
+
+            if (transform.localRotation.y < 0)
+                verticalMovement *= -1;
+
+            Vector3 moveAmount = transform.forward * verticalMovement;
+            _characterController.Move(moveAmount * _characterSpeed * Time.deltaTime);
+
+            if (Input.GetButtonDown("Jump") && _isGrounded)
+            {
+                _playerVelocity.y = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
+            }
+
+            _playerVelocity.y += _gravity * Time.deltaTime;
+            _characterController.Move(_playerVelocity * Time.deltaTime);
+
         }
-
-        if (_isOnEnemy)
-        {
-            float moveBack = -0.05f;
-            _characterController.Move(transform.forward * moveBack);
-        }
-
-        verticalMovement = Input.GetAxis("Horizontal");
-
-        if (verticalMovement < 0 && transform.rotation.y > 0)
-            transform.Rotate(0, -180, 0);
-        else if (verticalMovement > 0 && transform.rotation.y < 0)
-            transform.Rotate(0, 180, 0);
         else
-            transform.Rotate(0, 0, 0);
-
-        if (transform.localRotation.y < 0)
-            verticalMovement *= -1;
-
-        moveAmount = transform.forward * verticalMovement;
-
- 
-        _characterController.Move(moveAmount * _characterSpeed * Time.deltaTime);
-        
-
-        if (Input.GetButtonDown("Jump") && _isGrounded)
         {
-            _playerVelocity.y = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
+            _isGrounded = false;
+            _isOnEnemy = false;
+            _watchingEnemy = false;
         }
-
-        _playerVelocity.y += _gravity * Time.deltaTime;
-        _characterController.Move(_playerVelocity * Time.deltaTime);
-
     }
 
     public void LookAtEnemy()
