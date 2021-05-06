@@ -13,6 +13,7 @@ public class TargetController : MonoBehaviour
     [Header("Controllers")]
     [SerializeField] PlayerMovement _playerMove;
     [SerializeField] LevelController _levelController;
+    [SerializeField] AudioClip _swapTargetSFX;
 
     private EnemyBehavior _enemyTarget;
     private bool _currentlyLockedOn;
@@ -62,8 +63,7 @@ public class TargetController : MonoBehaviour
             if(Input.GetKey(KeyCode.U))
             {
                 _lockScreenActive = true;
-                _iconIndicatorImg.enabled = true;
-                _iconIndicatorImg.transform.position = _levelController.CurrentEnemyIcon().transform.position + new Vector3(0, 20, 0);
+                DisplayIconCrossHair();
                 _playerMove.LookAtEnemy();
 
             }
@@ -76,30 +76,26 @@ public class TargetController : MonoBehaviour
         else
         {
             //Target Switcher 
-            if (Input.GetKey(KeyCode.U))
+            if (Input.GetKey(KeyCode.I))
             {
                 _lockScreenActive = true;
 
-                if (Input.GetKeyDown(KeyCode.L))
+                if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.A))
                 {
                     if (_enemyIndex == nearbyEnemies.Length - 1)
                     {
-                        //If End Of List Has Been Reached, Start Over
-                        _enemyIndex = 0;
-                        _enemyTarget = nearbyEnemies[_enemyIndex];
+                        BackToStartOfList();
                     }
                     else
                     {
-                        //Move To Next Enemy In List
-                        _enemyIndex++;
-                        _enemyTarget = nearbyEnemies[_enemyIndex];
+                        NextInList();
                     }
 
-                    if(_levelController.CurrentEnemyIcon().IsActive())
+                    AudioManager.Instance.PlaySFX(_swapTargetSFX, 0.75f);
+
+                    if (_levelController.CurrentEnemyIcon().IsActive())
                     {
-                        //Determine Crosshair Location Based On The Current Target
-                        _iconIndicatorImg.enabled = true;
-                        _iconIndicatorImg.transform.position = _levelController.CurrentEnemyIcon().transform.position + new Vector3(0, 20, 0);
+                        DisplayIconCrossHair();
                     }
 
                     _playerMove.LookAtEnemy();
@@ -164,21 +160,38 @@ public class TargetController : MonoBehaviour
     {
         if (_enemyIndex == nearbyEnemies.Length - 1)
         {
-            //If End Of List Has Been Reached, Start Over
-            _enemyIndex = 0;
-            _enemyTarget = nearbyEnemies[_enemyIndex];
+            BackToStartOfList();
         }
         else
         {
-            //Move To Next Enemy In List
-            _enemyIndex++;
-            _enemyTarget = nearbyEnemies[_enemyIndex];
+            NextInList();
         }
 
-        //Determine Crosshair Location Based On The Current Target
-        _iconIndicatorImg.enabled = true;
-        _iconIndicatorImg.transform.position = _levelController.CurrentEnemyIcon().transform.position + new Vector3(0, 20, 0);
+        DisplayIconCrossHair();
 
         _playerMove.LookAtEnemy();
     }
+
+    private void BackToStartOfList()
+    {
+        //If End Of List Has Been Reached, Start Over
+        _enemyIndex = 0;
+        _enemyTarget = nearbyEnemies[_enemyIndex];
+    }
+
+    private void NextInList()
+    {
+        //Move To Next Enemy In List
+        _enemyIndex++;
+        _enemyTarget = nearbyEnemies[_enemyIndex];
+    }
+
+    private void DisplayIconCrossHair()
+    {
+        //Determine Crosshair Location Based On The Current Target
+        _iconIndicatorImg.enabled = true;
+        _iconIndicatorImg.transform.position = _levelController.CurrentEnemyIcon().transform.position + new Vector3(0, 20, 0);
+    }
 }
+
+

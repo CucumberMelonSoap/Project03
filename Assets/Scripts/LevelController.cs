@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class LevelController : MonoBehaviour
 {
@@ -30,11 +31,17 @@ public class LevelController : MonoBehaviour
     [SerializeField] TargetController _targetController;
     [SerializeField] Image[] _enemyIcons;
 
+    [Header("Sounds")]
+    [SerializeField] AudioClip _battleBGM;
+    [SerializeField] AudioClip _victoryBGM;
+    [SerializeField] AudioClip _playerDeath;
+
     private GameObject[] _allEntities;
     private Camera _mainCamera;
     private PlayerMovement _player;
     private EnemyBehavior[] _enemyList;
     private bool _isGameDone;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -42,7 +49,7 @@ public class LevelController : MonoBehaviour
         _player = GameObject.FindObjectOfType<PlayerMovement>();
         _enemyList = GameObject.FindObjectsOfType<EnemyBehavior>();
         _mainCamera = GameObject.FindObjectOfType<Camera>();
-
+        
         _damageToEnemyTxt.enabled = false;
         _damageToPlayerTxt.enabled = false;
 
@@ -71,6 +78,25 @@ public class LevelController : MonoBehaviour
             else
                 RevertScreen();
         }
+
+        if (Input.GetKeyDown(KeyCode.Escape))
+            ExitGame();
+
+        if (Input.GetKeyDown(KeyCode.E))
+            ReloadLevel();
+
+    }
+
+    private void ExitGame()
+    {
+        Application.Quit();
+    }
+
+    private void ReloadLevel()
+    {
+        Time.timeScale = 1;
+        SceneManager.LoadScene("BattleScene");
+        AudioManager.Instance.PlaySong(_battleBGM);
     }
 
     private void DarkenScreen()
@@ -181,7 +207,7 @@ public class LevelController : MonoBehaviour
         _damageToPlayerTxt.text = (_enemyList[_targetController.GetCurrentIndex()].GetDamage() * numAttacks).ToString();
         _damageToPlayerTxt.transform.position = _mainCamera.WorldToScreenPoint(enemyPosition + (Vector3.up * 2));
 
-        yield return new WaitForSecondsRealtime(0.75f);
+        yield return new WaitForSecondsRealtime(1f);
 
         _damageToPlayerTxt.enabled = false;   
     }
@@ -192,7 +218,7 @@ public class LevelController : MonoBehaviour
         _damageToEnemyTxt.text = damage.ToString();
         _damageToEnemyTxt.transform.position = _mainCamera.WorldToScreenPoint(position + (Vector3.up * 1.5f));
 
-        yield return new WaitForSecondsRealtime(0.75f);
+        yield return new WaitForSecondsRealtime(1f);
 
         _damageToEnemyTxt.enabled = false;
     }
@@ -240,6 +266,7 @@ public class LevelController : MonoBehaviour
     public void Victory()
     {
         _isGameDone = true;
+        AudioManager.Instance.PlaySong(_victoryBGM);
         _portraitNeutral.enabled = false;
         _portraitAttack.enabled = false;
         _portraitDamaged.enabled = false;
@@ -257,6 +284,9 @@ public class LevelController : MonoBehaviour
     public void Lose()
     {
         _isGameDone = true;
+        StopAllCoroutines();
+        AudioManager.Instance.PlaySFX(_playerDeath, 0.75f);
+        StartCoroutine(AudioManager.Instance.PauseSong(_playerDeath));
         _player.transform.GetComponent<PlayerMovement>().enabled = false;
         _player.GetComponent<PlayerStats>().enabled = false;
         _targetController.enabled = false;
@@ -272,7 +302,7 @@ public class LevelController : MonoBehaviour
         _portraitLose.enabled = true;
         _arteName.enabled = false;
         
-        StopAllCoroutines();
+        
         _losePanel.SetActive(true);
         Time.timeScale = 0;
     }

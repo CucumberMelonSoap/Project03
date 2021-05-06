@@ -29,7 +29,7 @@ public class CameraZoom : MonoBehaviour
         {
             ZoomOut();
         }
-        else if(_fromEdge.x < 0.75 && _mainCamera.transform.position.z < _lowBoundZ)
+        else if(_fromEdge.x < 0.6 && _mainCamera.transform.position.z < _lowBoundZ)
         { 
             ZoomIn();
         }

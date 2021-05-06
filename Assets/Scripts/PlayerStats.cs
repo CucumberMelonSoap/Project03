@@ -16,6 +16,11 @@ public class PlayerStats : MonoBehaviour
     [SerializeField] int _arteTPCost = 4;
     [SerializeField] GameObject _arteAttack = null;
 
+    [Header("Sounds")]
+    [SerializeField] AudioClip _basicAttackSFX = null;
+    [SerializeField] AudioClip _arteSFX = null;
+    [SerializeField] AudioClip _takeDamage = null;
+
     private LevelController _levelController;
     private PlayerMovement _player;
     private GameObject _sword;
@@ -41,11 +46,11 @@ public class PlayerStats : MonoBehaviour
         {
             if(!_isAttacking)
             {
-                if (Input.GetKeyDown(KeyCode.E) && _playerTP >= _arteTPCost && _player.GetIsGrounded())
+                if (Input.GetKeyDown(KeyCode.L) && _playerTP >= _arteTPCost && _player.GetIsGrounded())
                 {
                     StartCoroutine(ArteAttack(swordTransform));
                 }
-                else if (Input.GetKeyDown(KeyCode.Q) && _player.GetIsGrounded())
+                else if (Input.GetKeyDown(KeyCode.K) && _player.GetIsGrounded())
                 {
                     StartCoroutine(BasicAttack(swordTransform));
                 }
@@ -59,6 +64,7 @@ public class PlayerStats : MonoBehaviour
         _isAttacking = true;
 
         Destroy(Instantiate(_arteAttack, sword.position + (Vector3.down * 0.6f), _player.transform.rotation), 1.25f);
+        AudioManager.Instance.PlaySFX(_arteSFX, 1.75f);
         _levelController.StartCoroutine(_levelController.DispalyAttackPortait());
         _levelController.StartCoroutine(_levelController.DispalyArteName());
         UseTP(_arteTPCost);
@@ -73,6 +79,7 @@ public class PlayerStats : MonoBehaviour
         _isAttacking = true;
         Vector3 swordAttackMove = (sword.up * -0.2f) + (sword.forward * 0.75f);
         sword.position += swordAttackMove;
+        AudioManager.Instance.PlaySFX(_basicAttackSFX, 1.75f);
         _levelController.StartCoroutine(_levelController.DispalyAttackPortait());
 
         yield return new WaitForSecondsRealtime(0.1f);
@@ -86,19 +93,22 @@ public class PlayerStats : MonoBehaviour
         //deal damage
         _playerHealth -= damageAmount;
 
-        //effects
-
         //update slider
         _levelController.UpdateHealth();
 
         if (_playerHealth <= 0)
             _levelController.Lose();
+        else if(_playerHealth > 0)
+            AudioManager.Instance.PlaySFX(_takeDamage, 1.4f);
     }
 
     public void GainTP(int tpRecover)
     {
-        _playerTP += tpRecover;
-        _levelController.UpdateTP();
+        if(_playerTP < 68)
+        {
+            _playerTP += tpRecover;
+            _levelController.UpdateTP();
+        }
     }
 
     public void UseTP(int tpCost)

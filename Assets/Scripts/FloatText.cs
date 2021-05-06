@@ -10,9 +10,9 @@ public class FloatText : MonoBehaviour
     // Update is called once per frame
     void Update()
     {  
-        if(transform.position.y < 200)
+        if(transform.position.y < 500)
             transform.position += new Vector3(0, _floatSpeed, 0);
-        else if (Time.timeScale == 0 && transform.position.y > 120)
+        else if (Time.timeScale == 0 && transform.position.y > 50)
             Destroy(gameObject);
 
     }

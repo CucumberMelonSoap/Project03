@@ -119,7 +119,7 @@ public class EnemyBehavior : MonoBehaviour
 
                 //follow player
                 _destinationPoint = playerPosition;
-                _wanderTimer = 2.5f;
+                _wanderTimer = 0.5f;
 
                 if(Mathf.Abs(Vector3.Distance(transform.position, playerPosition)) <= 1.5)
                 {
